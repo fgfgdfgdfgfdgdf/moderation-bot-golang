@@ -73,19 +73,8 @@ func (h Unmute) Handler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	err = response.PunishLog(s, punish)
-	if err != nil {
-		return
-	}
-
-	err = s.GuildMemberTimeout(i.GuildID, member.User.ID, nil)
-	if err != nil {
-		return
-	}
-
-	err = tools.Insert_Punish(punish.ToDict())
-	if err != nil {
-		return
-	}
+	go response.PunishLog(s, punish)
+	go s.GuildMemberTimeout(i.GuildID, member.User.ID, nil)
+	go tools.Insert_Punish(punish.ToDict())
 
 }
