@@ -10,8 +10,6 @@ import (
 )
 
 func CheckPunishments(s *discordgo.Session) {
-	var punishRole string
-
 	PUNISH_TYPES := map[string]struct{}{
 		"BAN": {},
 	}
@@ -32,35 +30,33 @@ func CheckPunishments(s *discordgo.Session) {
 					continue
 				}
 
-				member, err := s.State.Member(punish.GuildId, punish.Member)
-				if err != nil {
-					continue
-				}
+				user, err := s.User(punish.Member)
 
 				_, exists := PUNISH_TYPES[punish.Category]
 				if exists {
 
 					switch punish.Category {
 					case "BAN":
-
-					}
-
-					err = s.GuildMemberRoleRemove(punish.GuildId, punish.Member, punishRole)
-					if err != nil {
-
+						if err != nil {
+							continue
+						}
+						err = s.GuildBanDelete(guild.ID, user.ID)
+						if err != nil {
+							continue
+						}
 					}
 
 					filter := bson.M{
 						"category": punish.Category,
-						"guildId":  punish.GuildId,
-						"memberId": punish.Member,
-						"endTime": bson.M{
+						"guild_id": punish.GuildId,
+						"user_id":  punish.Member,
+						"end_time": bson.M{
 							"$ne": nil,
 						},
 					}
 
 					data := bson.M{
-						"endTime": nil,
+						"end_time": nil,
 					}
 
 					err = tools.Update_Punish(filter, data)
@@ -71,7 +67,7 @@ func CheckPunishments(s *discordgo.Session) {
 					if logChannelId != "" {
 
 						embed := &discordgo.MessageEmbed{
-							Title:     fmt.Sprintf("[UN%s] %s", punish.Category, member.DisplayName()),
+							Title:     fmt.Sprintf("[UN%s] %s", punish.Category, user.Username),
 							Timestamp: time.Now().Format(time.RFC3339),
 							Footer: &discordgo.MessageEmbedFooter{
 								Text:    s.State.User.Username,
@@ -85,7 +81,7 @@ func CheckPunishments(s *discordgo.Session) {
 								},
 								{
 									Name:   "Пользователь",
-									Value:  member.Mention(),
+									Value:  user.Mention(),
 									Inline: true,
 								},
 								{
