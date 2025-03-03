@@ -40,7 +40,6 @@ func (h Mute) Command() *discordgo.ApplicationCommand {
 }
 
 func (h Mute) Handler(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	start_time := time.Now()
 	if !tools.GetModerationAccess(i.Member, i.GuildID) {
 		err := response.AccessError(s, i)
 		if err != nil {
@@ -107,8 +106,4 @@ func (h Mute) Handler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	go response.PunishLog(s, punish)
 	go s.GuildMemberTimeout(i.GuildID, member.User.ID, &punish_duration)
 	go tools.Insert_Punish(punish.ToDict())
-
-	time := time.Since(start_time)
-
-	fmt.Println(time)
 }
